@@ -1,15 +1,16 @@
 ##############################################################################
 # Advanced mail handling à la spamgourmet
-
-require [ "comparator-i;ascii-numeric"
-        , "copy"
-        , "envelope"
-        , "fileinto"
+	
+require ["copy"
+		, "regex"
+		, "variables"
+		, "fileinto"
+		, "mailbox"
+		, "envelope"
+        , "comparator-i;ascii-numeric"
         , "imap4flags"
-        , "mailbox"
         , "relational"
-        , "subaddress" 
-        , "variables" ];
+        , "subaddress" ];
 
 set "spamjam_user"        "jr";
 set "spamjam_counters"    "spamjam.counter";
@@ -19,9 +20,8 @@ set "spamjam_allow_all"   "x";
 set "spamjam_junk_folder" "Junk";
 set "spamjam_secret"   "lalala";
 
-# set "yes"to enable secret matchword that has to be contained to enable folder
-#creation
-set "spamjam_secret_enabled"    "yes";
+# set "yes"to enable secret matchword that has to be contained to enable folder creation
+set "spamjam_secret_enabled"	"yes";
 
 # Set to "yes" to accept mail to unconfigured addresses, i.e. addresses
 # for which no number of allowed addresses has been defined.
@@ -40,6 +40,7 @@ set "spamjam_allow_default" "${spamjam_allow_all}";
 
 
 if envelope :user "to" "${spamjam_user}" {
+
   if envelope :regex :detail "to" "([x0-9])-([a-z0-9]+)" {
     set :lower "spamcount" "${1}";
     set :lower "spamname" "${2}";
@@ -50,14 +51,14 @@ if envelope :user "to" "${spamjam_user}" {
     set "spamcount" "";
     set "spamname" "";
   }
-  if  not string "${spamname}" "" {
+  if  not string "${spamname}" "" {  
     # Allowed maximum
     if mailboxexists "${spamjam_config}.${spamname}.${spamjam_allow_all}" {
       set "allowedCount" "${spamjam_allow_all}";
     }
     elsif mailboxexists "${spamjam_config}.${spamname}.allow1" {
       set "allowedCount" "1";
-    }
+    } 
     elsif mailboxexists "${spamjam_config}.${spamname}.allow2" {
       set "allowedCount" "2";
     }
@@ -97,18 +98,17 @@ if envelope :user "to" "${spamjam_user}" {
       fileinto :create "${spamjam_junk_folder}";
       stop;
     }
-
+    
     # Create config mailbox
-    if not mailboxexists "${spamjam_config}.${spamname}.allow${allowedCount}"
-      {
-      if string "${spamjam_secret_enabled}" "yes" {
+    if not mailboxexists "${spamjam_config}.${spamname}.allow${allowedCount}" {
+        if string "${spamjam_secret_enabled}" "yes" {
     	 if not envelope :regex :detail "to" "(${spamjam_secret})"{
     		fileinto :create "${spamjam_junk_folder}";
      	 	stop;
-  	 }
-      }
+  		  }
+ 	     }
       fileinto :flags "\\Deleted" :create "${spamjam_config}.${spamname}.allow${allowedCount}";
-    }
+    } 
 
     # Find the number of mails we received for that address, including the
     # current message.
@@ -141,13 +141,10 @@ if envelope :user "to" "${spamjam_user}" {
     } else {
       set "currentCount" "1";
     }
-
-    if string :value "le" :comparator "i;ascii-numeric" "${currentCount}"
-"${allowedCount}" {
-      fileinto :flags "\\Deleted" :create
-"${spamjam_counters}.${spamname}.${currentCount}";
-      fileinto :create "${spamjam_mail}";# alles nur in einen
-folder.${spamname}";
+    
+    if string :value "le" :comparator "i;ascii-numeric" "${currentCount}" "${allowedCount}" {
+      fileinto :flags "\\Deleted" :create "${spamjam_counters}.${spamname}.${currentCount}";
+      fileinto :create "${spamjam_mail}";# alles nur in einen folder.${spamname}";
       stop;
     }
   }
