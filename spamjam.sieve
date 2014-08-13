@@ -2,11 +2,11 @@
 # Advanced mail handling à la spamgourmet
 	
 require ["copy"
-		, "regex"
-		, "variables"
-		, "fileinto"
-		, "mailbox"
-		, "envelope"
+	, "regex"
+	, "variables"
+	, "fileinto"
+	, "mailbox"
+	, "envelope"
         , "comparator-i;ascii-numeric"
         , "imap4flags"
         , "relational"
