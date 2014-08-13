@@ -2,11 +2,11 @@
 # Advanced mail handling à la spamgourmet
 	
 require ["copy"
-	, "regex"
-	, "variables"
-	, "fileinto"
-	, "mailbox"
-	, "envelope"
+		, "regex"
+		, "variables"
+		, "fileinto"
+		, "mailbox"
+		, "envelope"
         , "comparator-i;ascii-numeric"
         , "imap4flags"
         , "relational"
@@ -30,7 +30,7 @@ set "spamjam_allow_unconfigured" "yes";
 # Default number of mails which may be send to an address.  Set this to either
 # a number or to "from_mail" to use the maximum specifier as specified in the
 # mail address.
-set "spamjam_get_allow_from_address" "yes";
+#set "spamjam_get_allow_from_address" "yes";
 
 # Example: if the mail address is "spam+4-test@example.com" and the variable
 # is set to "from_mail", we will stop accepting mail to this address after 4
@@ -61,7 +61,7 @@ if envelope :user "to" "${spamjam_user}" {
   		  }
  	     }
            if string "${spamcount}" ""  {  #if no spamcount via mail set default if allowed 
-      			if string "${spamjam_get_allow_from_address}" "yes"{
+      			if string "${spamjam_allow_unconfigured}" "yes"{
   	          	   set "allowedCount" "${spamjam_allow_default}"; 
    				   }     			
         		else {
