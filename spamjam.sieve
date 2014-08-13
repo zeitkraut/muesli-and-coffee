@@ -2,11 +2,11 @@
 # Advanced mail handling à la spamgourmet
 	
 require ["copy"
-		, "regex"
-		, "variables"
-		, "fileinto"
-		, "mailbox"
-		, "envelope"
+	, "regex"
+	, "variables"
+	, "fileinto"
+	, "mailbox"
+	, "envelope"
         , "comparator-i;ascii-numeric"
         , "imap4flags"
         , "relational"
@@ -60,7 +60,7 @@ if envelope :user "to" "${spamjam_user}" {
      	 	stop;
   		  }
  	     }
-           if string "${spamcount}" ""  {  #if no spamcount via mail set default if allowed 
+           if string "${spamcount}" ""  {  #if no spamcount via mail set default, if allowed 
       			if string "${spamjam_allow_unconfigured}" "yes"{
   	          	   set "allowedCount" "${spamjam_allow_default}"; 
    				   }     			
@@ -69,15 +69,15 @@ if envelope :user "to" "${spamjam_user}" {
           			stop;
         			}
    			 }
-    	  else { #if configured via mail take from there
+    	  else { # take from mail
       			set "allowedCount" "${spamcount}";
     		}		
    fileinto :flags "\\Deleted" :create "${spamjam_config}.${spamname}.allow${allowedcount}";
     }
   
- 	else # folder exists, check how many mails are allowed
+ 	else # config folder exists, check how many mails are allowed
  	{
-         if  not string "${spamname}" "" {  
+         #if  not string "${spamname}" "" {  
         # Allowed maximum
         if mailboxexists "${spamjam_config}.${spamname}.allow${spamjam_allow_all}" {
           set "allowedCount" "${spamjam_allow_all}";
@@ -109,7 +109,7 @@ if envelope :user "to" "${spamjam_user}" {
         elsif mailboxexists "${spamjam_config}.${spamname}.allow9" {
           set "allowedCount" "9";
         }
-   	 }
+   	# }
   }
 
     # Find the number of mails we received for that address, including the
@@ -143,7 +143,7 @@ if envelope :user "to" "${spamjam_user}" {
     } else {
       set "currentCount" "1";
     }
-  # check if current count low enough
+  # check if current count low enough and inc counter
     if string :value "le" :comparator "i;ascii-numeric" "${currentCount}" "${allowedCount}" {
       fileinto :flags "\\Deleted" :create "${spamjam_counters}.${spamname}.${currentCount}";
       fileinto :create "${spamjam_mail}";# alles nur in einen folder.${spamname}";
