@@ -36,7 +36,7 @@ set "spamjam_get_allow_from_address" "yes";
 # is set to "from_mail", we will stop accepting mail to this address after 4
 # mails.  Setting it to "1" will cause just the first mail to this address to
 # get through.
-set "spamjam_allow_default" "${spamjam_allow_all}";
+set "spamjam_allow_default" "2";
 
 
 if envelope :user "to" "${spamjam_user}" {
@@ -51,64 +51,66 @@ if envelope :user "to" "${spamjam_user}" {
     set "spamcount" "";
     set "spamname" "";
   }
-  if  not string "${spamname}" "" {  
-    # Allowed maximum
-    if mailboxexists "${spamjam_config}.${spamname}.${spamjam_allow_all}" {
-      set "allowedCount" "${spamjam_allow_all}";
-    }
-    elsif mailboxexists "${spamjam_config}.${spamname}.allow1" {
-      set "allowedCount" "1";
-    } 
-    elsif mailboxexists "${spamjam_config}.${spamname}.allow2" {
-      set "allowedCount" "2";
-    }
-    elsif mailboxexists "${spamjam_config}.${spamname}.allow3" {
-      set "allowedCount" "3";
-    }
-    elsif mailboxexists "${spamjam_config}.${spamname}.allow4" {
-      set "allowedCount" "4";
-    }
-    elsif mailboxexists "${spamjam_config}.${spamname}.allow5" {
-      set "allowedCount" "5";
-    }
-    elsif mailboxexists "${spamjam_config}.${spamname}.allow6" {
-      set "allowedCount" "6";
-    }
-    elsif mailboxexists "${spamjam_config}.${spamname}.allow7" {
-      set "allowedCount" "7";
-    }
-    elsif mailboxexists "${spamjam_config}.${spamname}.allow8" {
-      set "allowedCount" "8";
-    }
-    elsif mailboxexists "${spamjam_config}.${spamname}.allow9" {
-      set "allowedCount" "9";
-    }
-    # Mail address is not configured
-    elsif string "${spamjam_allow_unconfigured}" "yes" {
-      if allof ( string "${spamjam_get_allow_from_address}" "yes"
-               , not string "${spamcount}" "" ) {
-        set "allowedCount" "${spamcount}";
-      }
-      else {
-        set "allowedCount" "${spamjam_allow_default}";
-      }
-    }
-    # Stop right here, as we already know that we don't want this mail.
-    else {
-      fileinto :create "${spamjam_junk_folder}";
-      stop;
-    }
-    
-    # Create config mailbox
-    if not mailboxexists "${spamjam_config}.${spamname}.allow${allowedCount}" {
-        if string "${spamjam_secret_enabled}" "yes" {
+  
+      # Create config mailbox
+    if not mailboxexists "${spamjam_config}.${spamname}.allow[x0-9]" {
+        if string "${spamjam_secret_enabled}" "yes" { #has to have secret in order to create
     	 if not envelope :regex :detail "to" "(${spamjam_secret})"{
     		fileinto :create "${spamjam_junk_folder}";
      	 	stop;
   		  }
  	     }
-      fileinto :flags "\\Deleted" :create "${spamjam_config}.${spamname}.allow${allowedCount}";
-    } 
+           if string "${spamcount}" ""  {  #if no spamcount via mail set default if allowed 
+      			if string "${spamjam_get_allow_from_address}" "yes"{
+  	          	   set "allowedCount" "${spamjam_allow_default}"; 
+   				   }     			
+        		else {
+         			fileinto :create "${spamjam_junk_folder}";
+          			stop;
+        			}
+   			 }
+    	  else { #if configured via mail take from there
+      			set "allowedCount" "${spamcount}";
+    		}		
+   fileinto :flags "\\Deleted" :create "${spamjam_config}.${spamname}.allow${allowedcount}";
+    }
+  
+ 	else # folder exists, check how many mails are allowed
+ 	{
+         if  not string "${spamname}" "" {  
+        # Allowed maximum
+        if mailboxexists "${spamjam_config}.${spamname}.allow${spamjam_allow_all}" {
+          set "allowedCount" "${spamjam_allow_all}";
+        }
+        elsif mailboxexists "${spamjam_config}.${spamname}.allow1" {
+          set "allowedCount" "1";
+        } 
+        elsif mailboxexists "${spamjam_config}.${spamname}.allow2" {
+          set "allowedCount" "2";
+        }
+        elsif mailboxexists "${spamjam_config}.${spamname}.allow3" {
+          set "allowedCount" "3";
+        }
+        elsif mailboxexists "${spamjam_config}.${spamname}.allow4" {
+          set "allowedCount" "4";
+        }
+        elsif mailboxexists "${spamjam_config}.${spamname}.allow5" {
+          set "allowedCount" "5";
+        }
+        elsif mailboxexists "${spamjam_config}.${spamname}.allow6" {
+          set "allowedCount" "6";
+        }
+        elsif mailboxexists "${spamjam_config}.${spamname}.allow7" {
+          set "allowedCount" "7";
+        }
+        elsif mailboxexists "${spamjam_config}.${spamname}.allow8" {
+          set "allowedCount" "8";
+        }
+        elsif mailboxexists "${spamjam_config}.${spamname}.allow9" {
+          set "allowedCount" "9";
+        }
+   	 }
+  }
 
     # Find the number of mails we received for that address, including the
     # current message.
@@ -141,13 +143,13 @@ if envelope :user "to" "${spamjam_user}" {
     } else {
       set "currentCount" "1";
     }
-    
+  # check if current count low enough
     if string :value "le" :comparator "i;ascii-numeric" "${currentCount}" "${allowedCount}" {
       fileinto :flags "\\Deleted" :create "${spamjam_counters}.${spamname}.${currentCount}";
       fileinto :create "${spamjam_mail}";# alles nur in einen folder.${spamname}";
       stop;
     }
-  }
+ 
   fileinto :create "${spamjam_junk_folder}";
   stop;
 }
