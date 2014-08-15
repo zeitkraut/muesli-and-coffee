@@ -2,11 +2,11 @@
 # Advanced mail handling à la spamgourmet
 	
 require ["copy"
-		, "regex"
-		, "variables"
-		, "fileinto"
-		, "mailbox"
-		, "envelope"
+	, "regex"
+	, "variables"
+	, "fileinto"
+	, "mailbox"
+	, "envelope"
         , "comparator-i;ascii-numeric"
         , "imap4flags"
         , "relational"
@@ -55,7 +55,7 @@ if envelope :user "to" "${spamjam_user}" {
         
   
   		if mailboxexists "${spamjam_config}.${spamname}.allow${spamjam_allow_all}" {
-          set "allowedCount" "9999999";
+          set "allowedCount" "z";
         }
         elsif mailboxexists "${spamjam_config}.${spamname}.allow1" {
           set "allowedCount" "1";
@@ -141,8 +141,13 @@ if envelope :user "to" "${spamjam_user}" {
     } else {
       set "currentCount" "1";
     }
-  # check if current count low enough and inc counter
-    if string :value "le" :comparator "i;ascii-numeric" "${currentCount}" "${allowedCount}" {
+  # check if allow all or current count low enough and inc counter
+    if string "${allowedCount}" "z"{
+        fileinto :flags "\\Deleted" :create "${spamjam_counters}.${spamname}.${currentCount}";
+        fileinto :create "${spamjam_mail}";
+        stop;
+  }
+    elsif string :value "le" :comparator "i;ascii-numeric" "${currentCount}" "${allowedCount}" {
       fileinto :flags "\\Deleted" :create "${spamjam_counters}.${spamname}.${currentCount}";
       fileinto :create "${spamjam_mail}";# alles nur in einen folder.${spamname}";
       stop;
