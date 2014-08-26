@@ -7,15 +7,15 @@ require ["copy"
 	, "fileinto"
 	, "mailbox"
 	, "envelope"
-        , "comparator-i;ascii-numeric"
-        , "imap4flags"
-        , "relational"
-        , "subaddress" ];
+	, "comparator-i;ascii-numeric"
+	, "imap4flags"
+	, "relational"
+	, "subaddress" ];
 
 set "spamjam_user"        "jr";
-set "spamjam_counters"    "spamjam.counter";
-set "spamjam_config"      "spamjam.config";
-set "spamjam_mail"        "spamjam.mail";
+set "spamjam_counters"    "spamjam/counter";
+set "spamjam_config"      "spamjam/config";
+set "spamjam_mail"        "spamjam/mail";
 set "spamjam_allow_all"   "x";
 set "spamjam_junk_folder" "Junk";
 set "spamjam_secret"   "lalala";
@@ -46,34 +46,34 @@ if envelope :user "to" "${spamjam_user}" {
 
         
   
-if mailboxexists "${spamjam_config}.${spamname}.allow${spamjam_allow_all}" {
+if mailboxexists "${spamjam_config}/${spamname}/allow${spamjam_allow_all}" {
           set "allowedCount" "z";
 	}
-        elsif mailboxexists "${spamjam_config}.${spamname}.allow1" {
+        elsif mailboxexists "${spamjam_config}/${spamname}/allow1" {
           set "allowedCount" "1";
         } 
-        elsif mailboxexists "${spamjam_config}.${spamname}.allow2" {
+        elsif mailboxexists "${spamjam_config}/${spamname}/allow2" {
           set "allowedCount" "2";
         }
-        elsif mailboxexists "${spamjam_config}.${spamname}.allow3" {
+        elsif mailboxexists "${spamjam_config}/${spamname}/allow3" {
           set "allowedCount" "3";
         }
-        elsif mailboxexists "${spamjam_config}.${spamname}.allow4" {
+        elsif mailboxexists "${spamjam_config}/${spamname}/allow4" {
           set "allowedCount" "4";
         }
-        elsif mailboxexists "${spamjam_config}.${spamname}.allow5" {
+        elsif mailboxexists "${spamjam_config}/${spamname}/allow5" {
           set "allowedCount" "5";
         }
-        elsif mailboxexists "${spamjam_config}.${spamname}.allow6" {
+        elsif mailboxexists "${spamjam_config}/${spamname}/allow6" {
           set "allowedCount" "6";
         }
-        elsif mailboxexists "${spamjam_config}.${spamname}.allow7" {
+        elsif mailboxexists "${spamjam_config}/${spamname}/allow7" {
           set "allowedCount" "7";
         }
-        elsif mailboxexists "${spamjam_config}.${spamname}.allow8" {
+        elsif mailboxexists "${spamjam_config}/${spamname}/allow8" {
           set "allowedCount" "8";
         }
-        elsif mailboxexists "${spamjam_config}.${spamname}.allow9" {
+        elsif mailboxexists "${spamjam_config}/${spamname}/allow9" {
           set "allowedCount" "9";
         }
 else      # Else Create config mailbox if allowed
@@ -95,50 +95,50 @@ else      # Else Create config mailbox if allowed
 		set "allowedCount" "${spamjam_allow_default}"; #set default if not alloed from mail
 		}
 	}		
-fileinto :flags "\\Deleted" :create "${spamjam_config}.${spamname}.allow${allowedcount}";
+fileinto :flags "\\Deleted" :create "${spamjam_config}/${spamname}/allow${allowedcount}";
 }
   
 
 
     # Find the number of mails we received for that address, including the
     # current message.
-    if mailboxexists "${spamjam_counters}.${spamname}.9" {
+    if mailboxexists "${spamjam_counters}/${spamname}/9" {
       set "currentCount" "10";
     }
-    elsif mailboxexists "${spamjam_counters}.${spamname}.8" {
+    elsif mailboxexists "${spamjam_counters}/${spamname}/8" {
       set "currentCount" "9";
     }
-    elsif mailboxexists "${spamjam_counters}.${spamname}.7" {
+    elsif mailboxexists "${spamjam_counters}/${spamname}/7" {
       set "currentCount" "8";
     }
-    elsif mailboxexists "${spamjam_counters}.${spamname}.6" {
+    elsif mailboxexists "${spamjam_counters}/${spamname}/6" {
       set "currentCount" "7";
     }
-    elsif mailboxexists "${spamjam_counters}.${spamname}.5" {
+    elsif mailboxexists "${spamjam_counters}/${spamname}/5" {
       set "currentCount" "6";
     }
-    elsif mailboxexists "${spamjam_counters}.${spamname}.4" {
+    elsif mailboxexists "${spamjam_counters}/${spamname}/4" {
       set "currentCount" "5";
     }
-    elsif mailboxexists "${spamjam_counters}.${spamname}.3" {
+    elsif mailboxexists "${spamjam_counters}/${spamname}/3" {
       set "currentCount" "4";
     }
-    elsif mailboxexists "${spamjam_counters}.${spamname}.2" {
+    elsif mailboxexists "${spamjam_counters}/${spamname}/2" {
       set "currentCount" "3";
     }
-    elsif mailboxexists "${spamjam_counters}.${spamname}.1" {
+    elsif mailboxexists "${spamjam_counters}/${spamname}/1" {
       set "currentCount" "2";
     } else {
       set "currentCount" "1";
     }
   # check if allow all or current count low enough and inc counter
     if string "${allowedCount}" "z"{
-      fileinto :flags "\\Deleted" :create "${spamjam_counters}.${spamname}.${currentCount}";
+      fileinto :flags "\\Deleted" :create "${spamjam_counters}/${spamname}/${currentCount}";
       fileinto :create "${spamjam_mail}";
           stop;
   }
     elsif string :value "le" :comparator "i;ascii-numeric" "${currentCount}" "${allowedCount}" {
-      fileinto :flags "\\Deleted" :create "${spamjam_counters}.${spamname}.${currentCount}";
+      fileinto :flags "\\Deleted" :create "${spamjam_counters}/${spamname}/${currentCount}";
       fileinto :create "${spamjam_mail}";# alles nur in einen folder.${spamname}";
       stop;
     }
