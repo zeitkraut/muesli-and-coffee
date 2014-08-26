@@ -23,19 +23,11 @@ set "spamjam_secret"   "lalala";
 # set "yes"to enable secret matchword that has to be contained to enable folder creation
 set "spamjam_secret_enabled"	"yes";
 
-# Set to "yes" to accept mail to unconfigured addresses, i.e. addresses
-# for which no number of allowed addresses has been defined.
-set "spamjam_allow_unconfigured" "yes";
+# Set to "yes" to accept the count from previoius unconfigured addresses, set to no to use
+# spamjam_allow_default 
+set "spamjam_allow_mailcount" "yes";
 
-# Default number of mails which may be send to an address.  Set this to either
-# a number or to "from_mail" to use the maximum specifier as specified in the
-# mail address.
-#set "spamjam_get_allow_from_address" "yes";
-
-# Example: if the mail address is "spam+4-test@example.com" and the variable
-# is set to "from_mail", we will stop accepting mail to this address after 4
-# mails.  Setting it to "1" will cause just the first mail to this address to
-# get through.
+# default allowed count if spamjam_allow_mailcount is diabled
 set "spamjam_allow_default" "2";
 
 
@@ -54,9 +46,9 @@ if envelope :user "to" "${spamjam_user}" {
 
         
   
-  		if mailboxexists "${spamjam_config}.${spamname}.allow${spamjam_allow_all}" {
+if mailboxexists "${spamjam_config}.${spamname}.allow${spamjam_allow_all}" {
           set "allowedCount" "z";
-        }
+	}
         elsif mailboxexists "${spamjam_config}.${spamname}.allow1" {
           set "allowedCount" "1";
         } 
@@ -84,30 +76,28 @@ if envelope :user "to" "${spamjam_user}" {
         elsif mailboxexists "${spamjam_config}.${spamname}.allow9" {
           set "allowedCount" "9";
         }
-  else
-  {
-      # Create config mailbox
-   # if not mailboxexists "${spamjam_config}.${spamname}.allow[x0-9]" {
-        if string "${spamjam_secret_enabled}" "yes" { #has to have secret in order to create
-    	 if not envelope :regex :detail "to" "(${spamjam_secret})"{
-    		fileinto :create "${spamjam_junk_folder}";
-     	 	stop;
-  		  }
- 	     }
-           if string "${spamcount}" ""  {  #if no spamcount via mail set default, if allowed 
-      			if string "${spamjam_allow_unconfigured}" "yes"{
-  	          	   set "allowedCount" "${spamjam_allow_default}"; 
-   				   }     			
-        		else {
-         			fileinto :create "${spamjam_junk_folder}";
-          			stop;
-        			}
-   			 }
-    	  else { # take from mail
-      			set "allowedCount" "${spamcount}";
-    		}		
-   fileinto :flags "\\Deleted" :create "${spamjam_config}.${spamname}.allow${allowedcount}";
-    }
+else      # Else Create config mailbox if allowed
+	{
+	if string "${spamjam_secret_enabled}" "yes" { #has to have secret in order to create
+		if not envelope :regex :detail "to" "(${spamjam_secret})"{
+			fileinto :create "${spamjam_junk_folder}";
+			stop;
+		}
+	}
+	if string "${spamcount}" ""  {  #if no spamcount via mail set default, if in mail check if allowed else use default 
+		set "allowedCount" "${spamjam_allow_default}";
+	}     			
+	else {
+		if string "${spamjam_allow_mailcount}" "yes"{
+			set "allowedCount" "${spamcount}";# take from mail
+			}
+		else { 
+		set "allowedCount" "${spamjam_allow_default}"; #set default if not alloed from mail
+		}
+	}		
+fileinto :flags "\\Deleted" :create "${spamjam_config}.${spamname}.allow${allowedcount}";
+}
+  
 
 
     # Find the number of mails we received for that address, including the
@@ -143,9 +133,9 @@ if envelope :user "to" "${spamjam_user}" {
     }
   # check if allow all or current count low enough and inc counter
     if string "${allowedCount}" "z"{
-        fileinto :flags "\\Deleted" :create "${spamjam_counters}.${spamname}.${currentCount}";
-        fileinto :create "${spamjam_mail}";
-        stop;
+      fileinto :flags "\\Deleted" :create "${spamjam_counters}.${spamname}.${currentCount}";
+      fileinto :create "${spamjam_mail}";
+          stop;
   }
     elsif string :value "le" :comparator "i;ascii-numeric" "${currentCount}" "${allowedCount}" {
       fileinto :flags "\\Deleted" :create "${spamjam_counters}.${spamname}.${currentCount}";
